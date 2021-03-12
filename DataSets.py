@@ -1,5 +1,10 @@
-from torch.utils.data import Dataset
+import os
+
 import pandas as pd
+import cv2
+import torch
+
+from torch.utils.data import Dataset
 
 
 class KeyPointDataSet(Dataset):
@@ -10,8 +15,25 @@ class KeyPointDataSet(Dataset):
 
         self.img_names, self.coordinates, self.class_labels = self._get_data(pd.read_csv(csv_path))
 
-    def __getitem__(self, idx):
-        pass
+    def __getitem__(self, idx: int) -> tuple:
+        """
+        Return items(image, coordinates, class_label) corresponding to the index parameter(idx).
+        @param
+            idx: Index corresponding to the data want to get.
+        @return
+            img:          the image tensor corresponding to the index.
+            coordinates:  the coordinates tensor corresponding to the index.
+            class_labels: class labels list.
+        """
+        # get the image corresponding to the index.
+        img = cv2.imread(os.path.join(self.img_path, self.img_names[idx]), cv2.IMREAD_COLOR)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = torch.tensor(img) / 255.
+
+        # get the coordinates corresponding to the index.
+        coordinates = torch.tensor(self.coordinates[idx])
+
+        return img, coordinates
 
     def __len__(self):
         """
@@ -50,5 +72,7 @@ class KeyPointDataSet(Dataset):
 
 if __name__ == "__main__":
     test_dataset = KeyPointDataSet(img_path="data/train_imgs", csv_path="data/train_df.csv")
-    print(test_dataset.img_names[0])
-    print(test_dataset.coordinates[0])
+    img, coordinates = test_dataset[0]
+    print(img)
+    print(coordinates.shape)
+    print(test_dataset.class_labels)
