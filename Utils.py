@@ -38,10 +38,17 @@ def visualize(img: np.ndarray, keypoints: np.ndarray):
     if not isinstance(keypoints, np.ndarray):
         keypoints = np.array(keypoints)
 
+    # Convert img's data type to uint8. And img has (channels, height, width) shape, convert it to (height, width, channels) shape.
     img = (img * 255).astype(dtype=np.uint8)
     img = np.transpose(img, (1, 2, 0))
-    keypoints = keypoints.astype(dtype=np.int)
 
+    # Convert key points data type to uint8, and if it has only 1 dimension, it means key points was flatten.
+    # So convert to them to represent 2 dimension(key point label, 2(x, y)).
+    keypoints = keypoints.astype(dtype=np.int)
+    if keypoints.ndim == 1:
+        keypoints = keypoints.reshape(-1, 2)
+
+    # Draw keypoints on the image.
     for keypoint in keypoints:
         cv2.circle(img, (keypoint[0], keypoint[1]), 1, (255, 0, 0), -1)
 
@@ -50,7 +57,7 @@ def visualize(img: np.ndarray, keypoints: np.ndarray):
     plt.show()
 
 
-def preprocess(img: np.ndarray, keypoints: np.ndarray, mode: str) -> tuple:
+def preprocess(img: np.ndarray, keypoints: np.ndarray, model_name: str) -> tuple:
     """
     Pre-processing the image and keypoints for using as the model's input.
     @param
@@ -64,12 +71,12 @@ def preprocess(img: np.ndarray, keypoints: np.ndarray, mode: str) -> tuple:
     height, width, _ = img.shape
     square_len = min(height, width)
 
-    if mode == "resnet":
+    if model_name == "resnet":
         transform = A.Compose(
             [
                 A.CenterCrop(height=square_len, width=square_len, always_apply=True),
                 A.Resize(height=224, width=224, always_apply=True),
-                A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+                A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             ],
             keypoint_params=A.KeypointParams(format="xy"),
         )
