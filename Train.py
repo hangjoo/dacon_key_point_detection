@@ -3,12 +3,16 @@ import time
 import numpy as np
 import torch
 
+from Models import create_model
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def train(model, criterion, optimizer, data_loader, num_epochs=25):
     print("===== training model starts =====")
     train_loader, valid_loader = data_loader
+
+    model.to(device)
 
     train_start_time = time.time()
 
@@ -70,4 +74,6 @@ def train(model, criterion, optimizer, data_loader, num_epochs=25):
 
 
 if __name__ == "__main__":
-    pass
+    model = create_model(class_num=28, model_name="resnet")
+    criterion = torch.nn.MSELoss()
+    optimizer = torch.optim.Adam(params=model.parameters(), lr=5e-4)
