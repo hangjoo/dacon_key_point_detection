@@ -7,7 +7,7 @@ import torch
 
 from torch.utils.data import Dataset
 
-from Utils import visualize, preprocess
+from Utils import visualize, preprocess, train_val_split
 
 
 class KeyPointDataSet(Dataset):
@@ -38,9 +38,9 @@ class KeyPointDataSet(Dataset):
 
         # Convert image, coordinates to tensors suitable for use in the Pytorch model's input.
         # To use an image for pytorch, convert image to have (channels, height, width).
-        img, keypoints = preprocess(img=img, keypoints=keypoints, mode="resnet")
+        img, keypoints = preprocess(img=img, keypoints=keypoints, model_name="resnet")
         img = torch.from_numpy(np.transpose(img, (2, 0, 1)))
-        keypoints = torch.from_numpy(keypoints)
+        keypoints = torch.from_numpy(keypoints.flatten())
 
         return img, keypoints
 
@@ -78,15 +78,43 @@ class KeyPointDataSet(Dataset):
 
         return img_names, keypoints, column_labels
 
+    def divide_self(self):
+        """
+        Divide dataset to training dataset and validation dataset.
+        @return
+            train_dataset: 
+            valid_dataset: 
+        """
+        train_dataset = KeyPointDataSet(img_path=self.img_path, csv_path=self.csv_path)
+        valid_dataset = KeyPointDataSet(img_path=self.img_path, csv_path=self.csv_path)
+
+        train_imgs, valid_imgs, train_keypoints, valid_keypoints = train_val_split(
+            imgs=self.img_names, keypoints=self.keypoints, random_state=42
+        )
+
+        train_dataset.img_names = train_imgs
+        train_dataset.keypoints = train_keypoints
+
+        valid_dataset.img_names = valid_imgs
+        valid_dataset.keypoints = valid_keypoints
+
+        return train_dataset, valid_dataset
+
 
 if __name__ == "__main__":
     test_dataset = KeyPointDataSet(img_path="data/train_imgs", csv_path="data/train_df.csv")
-    img, keypoints = test_dataset[1]
 
-    print(img.shape)
-    print(keypoints.shape)
-    print(test_dataset.class_labels)
+    # # sanity check KeyPointDataSet Class.
+    # img, keypoints = test_dataset[1]
+    # print(img.shape)
+    # print(keypoints.shape)
+    # print(test_dataset.class_labels)
 
-    visualize(img, keypoints)
-    print(torch.min(img))
-    print(torch.max(img))
+    # print(torch.min(img))
+    # print(torch.max(img))
+
+    # visualize(img, keypoints)
+
+    train_dataset, valid_dataset = test_dataset.divide_self()
+    print(train_dataset.__len__())
+    print(valid_dataset.__len__())
