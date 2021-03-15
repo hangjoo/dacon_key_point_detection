@@ -11,12 +11,14 @@ from Utils import visualize, preprocess, train_val_split
 
 
 class KeyPointDataSet(Dataset):
-    def __init__(self, img_path: str, csv_path: str):
+    def __init__(self, img_path: str, csv_path: str, model_type: str):
         super(Dataset, self).__init__()
         self.img_path = img_path  # path where images located.
         self.csv_path = csv_path  # path where csv file located.
 
         self.img_names, self.keypoints, self.class_labels = self._get_data(pd.read_csv(csv_path))
+
+        self.model_type = model_type
 
     def __getitem__(self, idx: int) -> tuple:
         """
@@ -38,9 +40,9 @@ class KeyPointDataSet(Dataset):
 
         # Convert image, coordinates to tensors suitable for use in the Pytorch model's input.
         # To use an image for pytorch, convert image to have (channels, height, width).
-        img, keypoints = preprocess(img=img, keypoints=keypoints, model_name="resnet")
-        img = torch.from_numpy(np.transpose(img, (2, 0, 1)))
-        keypoints = torch.from_numpy(keypoints.flatten())
+        img, keypoints = preprocess(img=img, keypoints=keypoints, model_name=self.model_type)
+        img = torch.tensor(np.transpose(img, (2, 0, 1)), dtype=torch.float)
+        keypoints = torch.tensor(keypoints.flatten(), dtype=torch.float)
 
         return img, keypoints
 
@@ -60,7 +62,7 @@ class KeyPointDataSet(Dataset):
             dataframe:     data frame from csv file. This has image name at index[0] and coordinates about keypoints at index[1:].
         @return
             img_names:     Numpy array that has all images name. E.g) "001-1-1-01-Z17_A-0000001.jpg"
-            keypoints:   Numpy array that has all keypoints about each image. This shape is (data size, the num of label type, 2).
+            keypoints:     Numpy array that has all keypoints about each image. This shape is (data size, the num of label type, 2).
                            Shape's last dimension represents x, y position.
             column_labels: A string List of label types.
         """
@@ -82,11 +84,11 @@ class KeyPointDataSet(Dataset):
         """
         Divide dataset to training dataset and validation dataset.
         @return
-            train_dataset: 
-            valid_dataset: 
+            train_dataset: The divided training data set.
+            valid_dataset: The divided validation data set.
         """
-        train_dataset = KeyPointDataSet(img_path=self.img_path, csv_path=self.csv_path)
-        valid_dataset = KeyPointDataSet(img_path=self.img_path, csv_path=self.csv_path)
+        train_dataset = KeyPointDataSet(img_path=self.img_path, csv_path=self.csv_path, model_type="resnet")
+        valid_dataset = KeyPointDataSet(img_path=self.img_path, csv_path=self.csv_path, model_type="resnet")
 
         train_imgs, valid_imgs, train_keypoints, valid_keypoints = train_val_split(
             imgs=self.img_names, keypoints=self.keypoints, random_state=42
@@ -104,16 +106,16 @@ class KeyPointDataSet(Dataset):
 if __name__ == "__main__":
     test_dataset = KeyPointDataSet(img_path="data/train_imgs", csv_path="data/train_df.csv")
 
-    # # sanity check KeyPointDataSet Class.
-    # img, keypoints = test_dataset[1]
-    # print(img.shape)
-    # print(keypoints.shape)
-    # print(test_dataset.class_labels)
+    # sanity check KeyPointDataSet Class.
+    img, keypoints = test_dataset[1]
+    print(img.shape)
+    print(keypoints.shape)
+    print(test_dataset.class_labels)
 
-    # print(torch.min(img))
-    # print(torch.max(img))
+    print(torch.min(img))
+    print(torch.max(img))
 
-    # visualize(img, keypoints)
+    visualize(img, keypoints)
 
     train_dataset, valid_dataset = test_dataset.divide_self()
     print(train_dataset.__len__())

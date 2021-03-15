@@ -61,12 +61,13 @@ def preprocess(img: np.ndarray, keypoints: np.ndarray, model_name: str) -> tuple
     """
     Pre-processing the image and keypoints for using as the model's input.
     @param
-        img:       
-        keypoints: 
-        mode:      
+        img:        Numpy array images. It shape is (the num of images, height, width, channels)
+        keypoints:  Key points about img parameter. It has total 24 kinds of key points and each key point has x,y positions.
+        model_name: The model name that would be used. It decide which preprocess method would be applied to.
+                    For example, if model_name is "resnet", the image would be additionally normalized by specific mean and std.
     @return
-        transformed_img:       
-        transformed_keypoints: 
+        transformed_img:       The preprocessed images. It has same dimension with img parameter, but it was resized.
+        transformed_keypoints: The preprocessed key points. As the images were resized, key points have also changed accordingly.
     """
     height, width, _ = img.shape
     square_len = min(height, width)
