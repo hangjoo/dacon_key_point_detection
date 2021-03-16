@@ -57,7 +57,7 @@ def visualize(img: np.ndarray, keypoints: np.ndarray):
     plt.show()
 
 
-def preprocess(img: np.ndarray, keypoints: np.ndarray, model_name: str) -> tuple:
+def preprocess(img: np.ndarray, keypoints: np.ndarray, model_type: str) -> tuple:
     """
     Pre-processing the image and keypoints for using as the model's input.
     @param
@@ -72,7 +72,7 @@ def preprocess(img: np.ndarray, keypoints: np.ndarray, model_name: str) -> tuple
     height, width, _ = img.shape
     square_len = min(height, width)
 
-    if model_name == "resnet":
+    if model_type == "resnet_train":
         transform = A.Compose(
             [
                 A.CenterCrop(height=square_len, width=square_len, always_apply=True),
@@ -82,12 +82,12 @@ def preprocess(img: np.ndarray, keypoints: np.ndarray, model_name: str) -> tuple
             keypoint_params=A.KeypointParams(format="xy"),
         )
 
-        transformed = transform(image=img, keypoints=keypoints)
+    transformed = transform(image=img, keypoints=keypoints)
 
-        transformed_img = transformed["image"]
-        transformed_keypoints = np.array(transformed["keypoints"])
+    transformed_img = transformed["image"]
+    transformed_keypoints = np.array(transformed["keypoints"])
 
-        return transformed_img, transformed_keypoints
+    return transformed_img, transformed_keypoints
 
 
 def cvt_keypoint(keypoints: np.ndarray, heatmap_size: int or tuple) -> np.ndarray:
