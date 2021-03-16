@@ -10,41 +10,44 @@ from torch.utils.data import Dataset
 from Utils import visualize, preprocess, train_val_split
 
 
-class KeyPointDataSet(Dataset):
-    def __init__(self, img_path: str, csv_path: str, model_type: str):
-        super(Dataset, self).__init__()
+class TrainDataSet(Dataset):
+    def __init__(self, img_path: str, csv_path: str, transform):
+        super(TrainDataSet, self).__init__()
         self.img_path = img_path  # path where images located.
         self.csv_path = csv_path  # path where csv file located.
 
         self.img_names, self.keypoints, self.class_labels = self._get_data(pd.read_csv(csv_path))
 
-        self.model_type = model_type
+        self.transform = transform
 
     def __getitem__(self, idx: int) -> tuple:
         """
         Return items(image, keypoints, class_label) corresponding to the index parameter(idx).
         @param
-            idx:          Index corresponding to the data want to get.
+            idx:                      Index corresponding to the data want to get.
         @return
-            img:          The image tensor corresponding to the index.
-            keypoints:  The coordinates tensor corresponding to the index.
-            class_labels: Class labels list.
+            transformed_image:        The image tensor corresponding to the index.
+            transformed_keypoints:    The coordinates tensor corresponding to the index.
         """
         # Get the image corresponding to the index.
         # Image loaded by cv2.imread has (height, width, channels) shape and BGR order.
-        img = cv2.imread(os.path.join(self.img_path, self.img_names[idx]), cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) / 255.0
+        image = cv2.imread(os.path.join(self.img_path, self.img_names[idx]), cv2.IMREAD_COLOR)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) / 255.0
 
         # Get the keypoints corresponding to the index.
         keypoints = self.keypoints[idx]
 
+        # Apply preprocessing transform to the image, keypoints.
+        transformed = self.transform(image=image, keypoints=keypoints)
+        transformed_image = transformed["image"]
+        transformed_keypoints = transformed["keypoints"]
+
         # Convert image, coordinates to tensors suitable for use in the Pytorch model's input.
         # To use an image for pytorch, convert image to have (channels, height, width).
-        img, keypoints = preprocess(img=img, keypoints=keypoints, model_name=self.model_type)
-        img = torch.tensor(np.transpose(img, (2, 0, 1)), dtype=torch.float)
-        keypoints = torch.tensor(keypoints.flatten(), dtype=torch.float)
+        transformed_image = torch.tensor(np.transpose(transformed_image, (2, 0, 1)), dtype=torch.float)
+        transformed_keypoints = torch.flatten(torch.tensor(transformed_keypoints, dtype=torch.float))
 
-        return img, keypoints
+        return transformed_image, transformed_keypoints
 
     def __len__(self):
         """
@@ -87,8 +90,8 @@ class KeyPointDataSet(Dataset):
             train_dataset: The divided training data set.
             valid_dataset: The divided validation data set.
         """
-        train_dataset = KeyPointDataSet(img_path=self.img_path, csv_path=self.csv_path, model_type="resnet")
-        valid_dataset = KeyPointDataSet(img_path=self.img_path, csv_path=self.csv_path, model_type="resnet")
+        train_dataset = TrainDataSet(img_path=self.img_path, csv_path=self.csv_path, transform=self.transform)
+        valid_dataset = TrainDataSet(img_path=self.img_path, csv_path=self.csv_path, transform=self.transform)
 
         train_imgs, valid_imgs, train_keypoints, valid_keypoints = train_val_split(
             imgs=self.img_names, keypoints=self.keypoints, random_state=42
@@ -103,20 +106,79 @@ class KeyPointDataSet(Dataset):
         return train_dataset, valid_dataset
 
 
+class TestDataSet(Dataset):
+    def __init__(self, img_path: str, csv_path: str, transform):
+        super(TestDataSet, self).__init__()
+        self.img_path = img_path
+        self.csv_path = csv_path
+
+        self.img_names = list(pd.read_csv(csv_path)["image"])
+        self.class_labels = list(pd.read_csv(csv_path).columns[1:])
+
+        self.transform = transform
+
+    def __getitem__(self, idx: int):
+        """
+        Return an image corresponding to the index parameter(idx).
+        @param
+            idx:               Index corresponding to the data want to get.
+        @return
+            transformed_image: The image tensor corresponding to the index.
+            original_shape:    The original image's shape.
+        """
+        # Get the image corresponding to the index.
+        # Image loaded by cv2.imread has (height, width, channels) shape and BGR order.
+        image = cv2.imread(os.path.join(self.img_path, self.img_names[idx]), cv2.IMREAD_COLOR)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) / 255.0
+        original_shape = image.shape[:2]
+
+        # Apply preprocessing transform to the image.
+        transformed = self.transform(image=image)
+        transformed_image = transformed["image"]
+        transformed_image = torch.tensor(np.transpose(transformed_image, (2, 0, 1)), dtype=torch.float)
+
+        file_name = self.img_names[idx]
+        
+        return transformed_image, original_shape, file_name
+
+    def __len__(self):
+        """
+        Return the total number of dataset.
+        @return
+            data_size: the total number of dataset.
+        """
+        data_size = len(self.img_names)
+        return data_size
+
+
 if __name__ == "__main__":
-    test_dataset = KeyPointDataSet(img_path="data/train_imgs", csv_path="data/train_df.csv")
+    import albumentations as A
+    import matplotlib.pyplot as plt
 
-    # sanity check KeyPointDataSet Class.
-    img, keypoints = test_dataset[1]
-    print(img.shape)
+    # sanity check TrainDataSet Class.
+    train_transform = A.Compose(
+        [
+            A.Resize(height=256, width=256, always_apply=True),
+        ],
+        keypoint_params=A.KeypointParams(format="xy"),
+    )
+    train_dataset = TrainDataSet(img_path="./data/train_imgs", csv_path="./data/train_df.csv", transform=train_transform)
+    train_img, keypoints = train_dataset[1]
+    print(train_img.shape)
     print(keypoints.shape)
-    print(test_dataset.class_labels)
+    print(train_dataset.class_labels)
+    visualize(train_img, keypoints)
 
-    print(torch.min(img))
-    print(torch.max(img))
+    # sanity check TestDataSet class.
+    test_transform = A.Compose(
+        [
+            A.Resize(height=256, width=256, always_apply=True),
+        ],
+    )
+    test_dataset = TestDataSet(img_path="./data/test_imgs", csv_path="./data/sample_submission.csv", transform=test_transform)
+    test_img, origin_shape = test_dataset[1]
+    print(test_img.shape)
+    print(origin_shape)
 
-    visualize(img, keypoints)
-
-    train_dataset, valid_dataset = test_dataset.divide_self()
-    print(train_dataset.__len__())
-    print(valid_dataset.__len__())
+    plt.imshow(test_img)
+    plt.show()
