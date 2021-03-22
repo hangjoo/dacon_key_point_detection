@@ -49,7 +49,7 @@ class TrainDataSet(Dataset):
 
         return transformed_image, transformed_keypoints
 
-    def __len__(self):
+    def __len__(self) -> int:
         """
         Return the total number of dataset.
         @return
@@ -83,7 +83,7 @@ class TrainDataSet(Dataset):
 
         return img_names, keypoints, column_labels
 
-    def divide_self(self):
+    def divide_self(self) -> tuple:
         """
         Divide dataset to training dataset and validation dataset.
         @return
@@ -112,8 +112,8 @@ class TestDataSet(Dataset):
         self.img_path = img_path
         self.csv_path = csv_path
 
-        self.img_names = list(pd.read_csv(csv_path)["image"])
-        self.class_labels = list(pd.read_csv(csv_path).columns[1:])
+        self.img_names = np.array(pd.read_csv(csv_path)["image"])
+        self.class_labels = np.array(pd.read_csv(csv_path).columns[1:])
 
         self.transform = transform
 
@@ -141,13 +141,13 @@ class TestDataSet(Dataset):
         
         return transformed_image, original_shape, file_name
 
-    def __len__(self):
+    def __len__(self) -> int:
         """
         Return the total number of dataset.
         @return
             data_size: the total number of dataset.
         """
-        data_size = len(self.img_names)
+        data_size = self.img_names.size
         return data_size
 
 

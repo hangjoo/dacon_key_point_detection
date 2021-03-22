@@ -50,7 +50,7 @@ def visualize(img: np.ndarray, keypoints: np.ndarray):
 
     # Draw keypoints on the image.
     for keypoint in keypoints:
-        cv2.circle(img, (keypoint[0], keypoint[1]), 1, (255, 0, 0), -1)
+        cv2.circle(img, (keypoint[0], keypoint[1]), 5, (255, 0, 0), -1)
 
     plt.imshow(img)
     plt.axis("off")

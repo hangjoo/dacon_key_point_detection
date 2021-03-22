@@ -1,8 +1,8 @@
-import time
 import os
 
 import albumentations as A
 import numpy as np
+import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
@@ -48,5 +48,19 @@ for test_idx, (inference_image, original_shape, file_name) in enumerate(test_loa
     
     print(f"[{test_idx + 1}/{len(test_loader)}]")
 
-# transform for orginal shape.
+original_height = np.array(original_height)
+original_width = np.array(original_width)
+inference_results = np.array(inference_results)
 
+for i in range(inference_results.shape[0]):
+    for j in range(inference_results.shape[1]):
+        if j % 2 == 0:
+            inference_results[i][j] = inference_results[i][j] * original_width[i] / INPUT_SIZE
+        else:
+            inference_results[i][j] = inference_results[i][j] * original_height[i] / INPUT_SIZE
+
+df_sub = pd.read_csv("./data/sample_submission.csv")
+df = pd.DataFrame(columns=df_sub.columns)
+df['image'] = test_dataset.img_names
+df.iloc[:, 1:] = inference_results
+df.head()

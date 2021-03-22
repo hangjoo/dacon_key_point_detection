@@ -15,7 +15,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 EXPERIMENT_TYPE = "coordinates regression"
 MODEL_TYPE = "resnet"
 EPOCH_NUM = 25
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 LEARNING_RATE = 1e-3
 DATA_PATH = "./data"
 
@@ -35,7 +35,7 @@ transform = A.Compose(
 
 # define dataset/dataloader.
 dataset = TrainDataSet(
-    img_path=os.path.join(DATA_PATH, "/pre-processed/cropped2_train_imgs"), csv_path=os.path.join(DATA_PATH, "pre-processed/cropped2_train_df.csv"), transform=transform
+    img_path=os.path.join(DATA_PATH, "train_imgs"), csv_path=os.path.join(DATA_PATH, "train_df.csv"), transform=transform
 )
 train_dataset, valid_dataset = dataset.divide_self()
 
