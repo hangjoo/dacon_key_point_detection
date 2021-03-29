@@ -13,6 +13,9 @@ from detectron2.data import MetadataCatalog, DatasetCatalog
 from utils import train_val_split, get_data_dicts
 from Trainer import Trainer
 
+import neptune
+import neptune_config
+
 
 def main():
     data_name = "augmented_1"
@@ -31,6 +34,20 @@ def main():
     image_set = {"train": train_imgs, "valid": valid_imgs}
     keypoints_set = {"train": train_keypoints, "valid": valid_keypoints}
 
+    hyper_params = {
+        "augmented ver": data_name,
+        "learning rate": 0.001,
+        "num_epochs": 5000,
+    }
+    
+    ns = neptune.init(project_qualified_name="hangjoo/Dacon-motion-keypoint-detection", api_token=neptune_config.token)
+    neptune.create_experiment(
+        name="detectron2",
+        params=hyper_params,
+        upload_source_files="./code/train.py"
+    )
+    experiment_id = ns._get_current_experiment()._id
+
     for phase in ["train", "valid"]:
         DatasetCatalog.register(
             "keypoints_" + phase, lambda phase=phase: get_data_dicts(data_path, image_set[phase], keypoints_set[phase])
@@ -44,18 +61,18 @@ def main():
     cfg.merge_from_file(model_zoo.get_config_file("COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x.yaml"))
     cfg.DATASETS.TRAIN = ("keypoints_train",)
     cfg.DATASETS.TEST = ("keypoints_valid",)
-    cfg.DATALOADER.NUM_WORKERS = 0
-    cfg.SOLVER.IMS_PER_BATCH = 2
-    cfg.SOLVER.BASE_LR = 0.001
-    cfg.SOLVER.MAX_ITER = 5000
+    cfg.DATALOADER.NUM_WORKERS = 0  # On Windows environment, this value must be 0.
+    cfg.SOLVER.IMS_PER_BATCH = 2  # mini batch size would be (SOLVER.IMS_PER_BATCH) * (ROI_HEADS.BATCH_SIZE_PER_IMAGE).
+    cfg.SOLVER.BASE_LR = hyper_params["learning_rate"]  # Learning Rate.
+    cfg.SOLVER.MAX_ITER = hyper_params["num_epochs"]  # Max iteration.
     cfg.SOLVER.STEPS = []
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x.yaml")
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 32  # Use to calculate RPN loss.
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
     cfg.MODEL.ROI_KEYPOINT_HEAD.NUM_KEYPOINTS = 24
-
     cfg.TEST.KEYPOINT_OKS_SIGMAS = np.ones((24, 1), dtype=float).tolist()
-    cfg.TEST.EVAL_PERIOD = 1000
+    # cfg.TEST.EVAL_PERIOD = 1000  # Evaluation would occur for every cfg.TEST.EVAL_PERIOD value.
+    cfg.OUTPUT_DIR = os.path.join("./output", experiment_id)
 
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
     trainer = Trainer(cfg)
