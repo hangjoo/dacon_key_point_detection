@@ -44,11 +44,11 @@ def main():
     cfg.DATASETS.TRAIN = ("keypoints_train",)
     cfg.DATASETS.TEST = ("keypoints_valid",)
     cfg.DATALOADER.NUM_WORKERS = 0
-    cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x.yaml")
     cfg.SOLVER.IMS_PER_BATCH = 2
     cfg.SOLVER.BASE_LR = 0.001
-    cfg.SOLVER.MAX_ITER = 10
+    cfg.SOLVER.MAX_ITER = 20
     cfg.SOLVER.STEPS = []
+    cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x.yaml")
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
     cfg.MODEL.ROI_KEYPOINT_HEAD.NUM_KEYPOINTS = 24
@@ -85,10 +85,9 @@ def main():
         try:
             for out in outputs[0]:
                 pred.extend([float(e) for e in out[:2]])
-        except:
+        except IndexError:
             pred.extend([0] * 48)
             except_list.append(filepath)
-            # print(filepath)
         preds.append(pred)
 
     df_sub = pd.read_csv("./data/sample_submission.csv")
