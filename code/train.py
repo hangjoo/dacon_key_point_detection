@@ -15,8 +15,9 @@ from Trainer import Trainer
 
 
 def main():
-    data_path = "./data"
-    csv_name = "train_df_modified.csv"
+    data_name = "augmented_1"
+    data_path = os.path.join("./data", data_name)
+    csv_name = data_name + ".csv"
 
     train_df = pd.read_csv(os.path.join(data_path, csv_name))
 
@@ -46,10 +47,10 @@ def main():
     cfg.DATALOADER.NUM_WORKERS = 0
     cfg.SOLVER.IMS_PER_BATCH = 2
     cfg.SOLVER.BASE_LR = 0.001
-    cfg.SOLVER.MAX_ITER = 20
+    cfg.SOLVER.MAX_ITER = 5000
     cfg.SOLVER.STEPS = []
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x.yaml")
-    cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128
+    cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 32  # Use to calculate RPN loss.
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
     cfg.MODEL.ROI_KEYPOINT_HEAD.NUM_KEYPOINTS = 24
 

@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -70,6 +71,8 @@ def main():
     dst_df["image"] = augmented_image_list
     dst_df.iloc[:, 1:] = augmented_keypoints_list
     dst_df.to_csv(os.path.join(dst_path, dst_name + ".csv"), index=False)
+
+    shutil.copytree(os.path.join(src_path, "test_imgs"), os.path.join(dst_path, "test_imgs"))
 
 
 if __name__ == "__main__":
