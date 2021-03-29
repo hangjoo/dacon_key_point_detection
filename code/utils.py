@@ -1,8 +1,14 @@
 import os
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 import cv2
+
+import neptune
+
 from detectron2.structures import BoxMode
+from detectron2.engine import HookBase
+from detectron2.utils.events import get_event_storage
 
 
 def train_val_split(imgs, keypoints, random_state=42):
@@ -24,6 +30,7 @@ def train_val_split(imgs, keypoints, random_state=42):
                 validations.append(np.where(imgs == value[i])[0][0])
             else:
                 trains.append(np.where(imgs == value[i])[0][0])
+
     return (imgs[trains], imgs[validations], keypoints[trains], keypoints[validations])
 
 
@@ -56,4 +63,59 @@ def get_data_dicts(data_dir, imgs, keypoints):
 
         record["annotations"] = [obj]
         dataset_dicts.append(record)
+
     return dataset_dicts
+
+
+def draw_keypoints(image, keypoints, color=(0, 0, 255), diameter=5):
+    keypoints_ = keypoints.copy()
+    if len(keypoints_) == 48:
+        keypoints_ = [[keypoints_[i], keypoints_[i + 1]] for i in range(0, len(keypoints_), 2)]
+
+    assert isinstance(image, np.ndarray), "image argument does not numpy array."
+    image_ = np.copy(image)
+    for x, y in keypoints_:
+        cv2.circle(image_, (int(x), int(y)), diameter, color, -1)
+
+    return image_
+
+
+def save_samples(dst_path, image_path, csv_path, mode="random", size=None, index=None):
+    df = pd.read_csv(csv_path)
+
+    if mode == "random":
+        assert size is not None, "mode argument is random, but size argument is not given."
+        choice_idx = np.random.choice(len(df), size=size, replace=False)
+    if mode == "choice":
+        assert index is not None, "mode argument is choice, but index argument is not given."
+        choice_idx = index
+
+    for idx in choice_idx:
+        image_name = df.iloc[idx, 0]
+        keypoints = df.iloc[idx, 1:]
+        image = cv2.imread(os.path.join(image_path, image_name), cv2.IMREAD_COLOR)
+
+        combined = draw_keypoints(image, keypoints)
+        cv2.imwrite(os.path.join(dst_path, "sample" + image_name), combined)
+
+
+class hook_neptune(HookBase):
+    def __init__(self, max_iter):
+        self._max_iter = max_iter
+
+    def after_step(self):
+        try:
+            storage = get_event_storage()
+            cur_iter = storage.iter
+
+            if cur_iter == self._max_iter:
+                # This hook only reports training progress (loss, ETA, etc) but not other data,
+                # therefore do not write anything after training succeeds, even if this method
+                # is called.
+                return
+
+            for k, v in storage.histories().items():
+                if "loss" in k:
+                    neptune.log_metric(k, cur_iter, v.median(20))
+        except neptune.exceptions.NeptuneUninitializedException:
+            pass
