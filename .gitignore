@@ -1,9 +1,10 @@
-# directories
-__pycache__/
-.ipynb_checkpoints/
-.vscode/
-data/
-.trash/
-
-# files.
+# files
 data.zip
+
+# dirs
+data/
+.vscode/
+detectron2-windows2/
+*/__pycache__/
+*/output/
+output/
