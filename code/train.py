@@ -10,7 +10,7 @@ from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog, DatasetCatalog
 
-from utils import train_val_split, get_data_dicts
+from utils import train_val_split, get_data_dicts, hook_neptune, save_samples
 from Trainer import Trainer
 
 import neptune
@@ -18,7 +18,7 @@ import neptune_config
 
 
 def main():
-    data_name = "augmented_1"
+    data_name = "original"
     data_path = os.path.join("./data", data_name)
     csv_name = data_name + ".csv"
 
@@ -35,17 +35,14 @@ def main():
     keypoints_set = {"train": train_keypoints, "valid": valid_keypoints}
 
     hyper_params = {
-        "augmented ver": data_name,
-        "learning rate": 0.001,
-        "num_epochs": 5000,
+        "augmented_ver": data_name,
+        "learning_rate": 0.001,
+        "num_epochs": 10,
+        "batch_size": 256
     }
-    
+
     ns = neptune.init(project_qualified_name="hangjoo/Dacon-motion-keypoint-detection", api_token=neptune_config.token)
-    neptune.create_experiment(
-        name="detectron2",
-        params=hyper_params,
-        upload_source_files="./code/train.py"
-    )
+    neptune.create_experiment(name="detectron2", params=hyper_params, upload_source_files="./code/train.py")
     experiment_id = ns._get_current_experiment()._id
 
     for phase in ["train", "valid"]:
@@ -61,13 +58,14 @@ def main():
     cfg.merge_from_file(model_zoo.get_config_file("COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x.yaml"))
     cfg.DATASETS.TRAIN = ("keypoints_train",)
     cfg.DATASETS.TEST = ("keypoints_valid",)
-    cfg.DATALOADER.NUM_WORKERS = 0  # On Windows environment, this value must be 0.
+    cfg.DATALOADER.NUM_WORKERS = 2  # On Windows environment, this value must be 0.
     cfg.SOLVER.IMS_PER_BATCH = 2  # mini batch size would be (SOLVER.IMS_PER_BATCH) * (ROI_HEADS.BATCH_SIZE_PER_IMAGE).
     cfg.SOLVER.BASE_LR = hyper_params["learning_rate"]  # Learning Rate.
     cfg.SOLVER.MAX_ITER = hyper_params["num_epochs"]  # Max iteration.
     cfg.SOLVER.STEPS = []
+    # cfg.SOLVER.LR_SCHEDULER_NAME = "WarmupMultiStepLR"
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x.yaml")
-    cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 32  # Use to calculate RPN loss.
+    cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = hyper_params["batch_size"]  # Use to calculate RPN loss.
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
     cfg.MODEL.ROI_KEYPOINT_HEAD.NUM_KEYPOINTS = 24
     cfg.TEST.KEYPOINT_OKS_SIGMAS = np.ones((24, 1), dtype=float).tolist()
@@ -76,6 +74,7 @@ def main():
 
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
     trainer = Trainer(cfg)
+    trainer.register_hooks([hook_neptune(max_iter=hyper_params["num_epochs"])])
     trainer.resume_or_load(resume=False)
     trainer.train()
 
@@ -113,8 +112,13 @@ def main():
     df["image"] = files
     df.iloc[:, 1:] = preds
 
-    df.to_csv("./submissions.csv", index=False)
-    print(except_list)
+    df.to_csv(os.path.join(cfg.OUTPUT_DIR, "submission.csv"), index=False)
+    if except_list:
+        print(
+            "The following images are not detected keypoints. The row corresponding that images names would be filled with 0 value."
+        )
+        print(*except_list)
+    save_samples(cfg.OUTPUT_DIR, test_dir, os.path.join(cfg.OUTPUT_DIR, "submission.csv"), mode="random", size=5)
 
 
 if __name__ == "__main__":
