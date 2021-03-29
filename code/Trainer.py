@@ -1,10 +1,8 @@
 # Some basic setup:
 # Setup detectron2 logger
-import detectron2
 from detectron2.utils.logger import setup_logger
 
 # import some common libraries
-import numpy as np
 import os
 
 # import some common detectron2 utilities
