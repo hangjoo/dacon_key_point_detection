@@ -12,9 +12,14 @@ keypoint_params = A.KeypointParams(format="xy", label_fields=["class_labels"], r
 transform_dict = {
     "Original": A.Compose([A.RandomCrop(height=1080, width=1920, p=1)], keypoint_params=keypoint_params),
     "CenterCrop": A.Compose([A.CenterCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params),
-    "RandomCrop_1": A.Compose([A.RandomCrop(height=720, width=960, p=1)], keypoint_params=keypoint_params),
-    "RandomCrop_2": A.Compose([A.RandomCrop(height=540, width=720, p=1)], keypoint_params=keypoint_params),
-    "RandomCrop_3": A.Compose([A.RandomCrop(height=960, width=960, p=1)], keypoint_params=keypoint_params),
+    "RandomCrop_1": A.Compose([A.RandomCrop(height=540, width=720, p=1)], keypoint_params=keypoint_params),
+    "RandomCrop_2": A.Compose([A.RandomCrop(height=720, width=960, p=1)], keypoint_params=keypoint_params),
+    "RandomCrop_3": A.Compose([A.RandomCrop(height=960, width=1280, p=1)], keypoint_params=keypoint_params),
+    "RandomCrop_4": A.Compose([A.RandomCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params),
+    "RandomSquare_1": A.Compose([A.RandomCrop(height=960, width=960, p=1)], keypoint_params=keypoint_params),
+    "RandomSquare_2": A.Compose([A.RandomCrop(height=720, width=720, p=1)], keypoint_params=keypoint_params),
+    "RandomSquare_3": A.Compose([A.RandomCrop(height=540, width=540, p=1)], keypoint_params=keypoint_params),
+    "RandomSquare_4": A.Compose([A.RandomCrop(height=420, width=420, p=1)], keypoint_params=keypoint_params),
     "Rotate45": A.Compose([A.Rotate(limit=45, p=1)], keypoint_params=keypoint_params),
     "Rotate45_CenterCrop": A.Compose([A.Rotate(limit=45, p=1), A.CenterCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params),
     "Rotate45_RandomCrop_1": A.Compose([A.Rotate(limit=45, p=1), A.RandomCrop(height=720, width=960, p=1)], keypoint_params=keypoint_params),
@@ -51,7 +56,8 @@ def main():
             "RandomCrop_1",
             "RandomCrop_2",
             "RandomCrop_3",
-            "CenterCrop",
+            "RandomSquare_1",
+            "RandomSquare_2",
             "Rotate45",
         ]
 
@@ -69,8 +75,6 @@ def main():
     dst_df["image"] = augmented_image_list
     dst_df.iloc[:, 1:] = augmented_keypoints_list
     dst_df.to_csv(os.path.join(dst_path, dst_name + ".csv"), index=False)
-
-    shutil.copytree(os.path.join(src_path, "test_imgs"), os.path.join(dst_path, "test_imgs"))
 
 
 if __name__ == "__main__":

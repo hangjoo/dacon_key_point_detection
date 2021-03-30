@@ -121,6 +121,7 @@ def main():
         )
         print(*except_list)
     save_samples(cfg.OUTPUT_DIR, test_dir, os.path.join(cfg.OUTPUT_DIR, "submission.csv"), mode="random", size=5)
+    neptune.stop()
 
 
 if __name__ == "__main__":
