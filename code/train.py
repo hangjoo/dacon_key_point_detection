@@ -38,7 +38,7 @@ def main():
 
     hyper_params = {
         "augmented_ver": data_name,
-        "learning_rate": 0.0025,
+        "learning_rate": 0.0005,
         "num_epochs": 5000,
         "batch_size": 256
     }
