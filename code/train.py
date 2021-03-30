@@ -10,7 +10,7 @@ from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog, DatasetCatalog
 
-from utils import train_val_split, get_data_dicts, hook_neptune, save_samples
+from utils import train_val_split, get_data_dicts, hook_neptune, save_samples, fix_random_seed
 from Trainer import Trainer
 
 import neptune
@@ -18,7 +18,9 @@ import neptune_config
 
 
 def main():
-    data_name = "original"
+    fix_random_seed(random_seed=423)
+
+    data_name = "augmented_1"
     data_path = os.path.join("./data", data_name)
     csv_name = data_name + ".csv"
 
@@ -29,15 +31,15 @@ def main():
 
     image_list = train_df.iloc[:, 0].to_numpy()
     keypoints_list = train_df.iloc[:, 1:].to_numpy()
-    train_imgs, valid_imgs, train_keypoints, valid_keypoints = train_val_split(image_list, keypoints_list, random_state=42)
+    train_imgs, valid_imgs, train_keypoints, valid_keypoints = train_val_split(image_list, keypoints_list)
 
     image_set = {"train": train_imgs, "valid": valid_imgs}
     keypoints_set = {"train": train_keypoints, "valid": valid_keypoints}
 
     hyper_params = {
         "augmented_ver": data_name,
-        "learning_rate": 0.001,
-        "num_epochs": 10,
+        "learning_rate": 0.0025,
+        "num_epochs": 5000,
         "batch_size": 256
     }
 

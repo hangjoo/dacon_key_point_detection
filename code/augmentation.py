@@ -34,7 +34,7 @@ def main():
     keypoints_list = src_df.iloc[:, 1:].to_numpy()
     paired_keypoints_list = keypoints_list.reshape(-1, 24, 2)
 
-    dst_name = "augmented_1"
+    dst_name = "augmented_2"
     dst_path = os.path.join(data_path, dst_name)
     dst_image_path = os.path.join(dst_path, "train_imgs")
 
@@ -50,11 +50,9 @@ def main():
             "Original",
             "RandomCrop_1",
             "RandomCrop_2",
+            "RandomCrop_3",
             "CenterCrop",
             "Rotate45",
-            "Rotate45_RandomCrop_1",
-            "Rotate45_RandomCrop_2",
-            "Rotate45_CenterCrop",
         ]
 
         for transform_name in transform_names:

@@ -1,4 +1,5 @@
 import os
+import random
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -6,12 +7,14 @@ import cv2
 
 import neptune
 
+import torch
+
 from detectron2.structures import BoxMode
 from detectron2.engine import HookBase
 from detectron2.utils.events import get_event_storage
 
 
-def train_val_split(imgs, keypoints, random_state=42):
+def train_val_split(imgs, keypoints):
     d = dict()
     for file in imgs:
         key = "".join(file.split("-")[:-1])
@@ -20,7 +23,6 @@ def train_val_split(imgs, keypoints, random_state=42):
         else:
             d[key].append(file)
 
-    np.random.seed(random_state)
     trains = []
     validations = []
     for key, value in d.items():
@@ -97,6 +99,16 @@ def save_samples(dst_path, image_path, csv_path, mode="random", size=None, index
 
         combined = draw_keypoints(image, keypoints)
         cv2.imwrite(os.path.join(dst_path, "sample" + image_name), combined)
+
+
+def fix_random_seed(random_seed=423):
+    torch.manual_seed(random_seed)
+    torch.cuda.manual_seed(random_seed)
+    torch.cuda.manual_seed_all(random_seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(random_seed)
+    random.seed(random_seed)
 
 
 class hook_neptune(HookBase):
