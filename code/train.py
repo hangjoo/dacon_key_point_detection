@@ -10,7 +10,7 @@ from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog, DatasetCatalog
 
-from utils import train_val_split, get_data_dicts, hook_neptune, save_samples, fix_random_seed
+from utils import train_val_split, get_data_dicts, hook_neptune, save_samples
 from Trainer import Trainer
 
 import neptune
@@ -18,29 +18,38 @@ import neptune_config
 
 
 def main():
-    fix_random_seed(random_seed=423)
-
-    data_name = "augmented_1"
+    data_name = "augmented_2"
     data_path = os.path.join("./data", data_name)
     csv_name = data_name + ".csv"
 
     train_df = pd.read_csv(os.path.join(data_path, csv_name))
 
     keypoint_names = list(map(lambda x: x[:-2], train_df.columns.to_list()[1::2]))
-    keypoint_flip_map = [(keypoint_name + "_x", keypoint_name + "_y") for keypoint_name in keypoint_names]
+    keypoint_flip_map = [
+        ("left_eye", "right_eye"),
+        ("left_ear", "right_ear"),
+        ("left_shoulder", "right_shoulder"),
+        ("left_elbow", "right_elbow"),
+        ("left_wrist", "right_wrist"),
+        ("left_hip", "right_hip"),
+        ("left_knee", "right_knee"),
+        ("left_ankle", "right_ankle"),
+        ("left_palm", "right_palm"),
+        ("left_instep", "right_instep"),
+    ]
 
     image_list = train_df.iloc[:, 0].to_numpy()
     keypoints_list = train_df.iloc[:, 1:].to_numpy()
-    train_imgs, valid_imgs, train_keypoints, valid_keypoints = train_val_split(image_list, keypoints_list)
+    train_imgs, valid_imgs, train_keypoints, valid_keypoints = train_val_split(image_list, keypoints_list, random_state=42)
 
     image_set = {"train": train_imgs, "valid": valid_imgs}
     keypoints_set = {"train": train_keypoints, "valid": valid_keypoints}
 
     hyper_params = {
         "augmented_ver": data_name,
-        "learning_rate": 0.0005,
+        "learning_rate": 0.0025,
         "num_epochs": 5000,
-        "batch_size": 256
+        "batch_size": 128
     }
 
     ns = neptune.init(project_qualified_name="hangjoo/Dacon-motion-keypoint-detection", api_token=neptune_config.token)
@@ -61,7 +70,7 @@ def main():
     cfg.DATASETS.TRAIN = ("keypoints_train",)
     cfg.DATASETS.TEST = ("keypoints_valid",)
     cfg.DATALOADER.NUM_WORKERS = 2  # On Windows environment, this value must be 0.
-    cfg.SOLVER.IMS_PER_BATCH = 2  # mini batch size would be (SOLVER.IMS_PER_BATCH) * (ROI_HEADS.BATCH_SIZE_PER_IMAGE).
+    cfg.SOLVER.IMS_PER_BATCH = 1  # mini batch size would be (SOLVER.IMS_PER_BATCH) * (ROI_HEADS.BATCH_SIZE_PER_IMAGE).
     cfg.SOLVER.BASE_LR = hyper_params["learning_rate"]  # Learning Rate.
     cfg.SOLVER.MAX_ITER = hyper_params["num_epochs"]  # Max iteration.
     cfg.SOLVER.STEPS = []

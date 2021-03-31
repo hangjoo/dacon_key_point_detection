@@ -14,7 +14,7 @@ from detectron2.engine import HookBase
 from detectron2.utils.events import get_event_storage
 
 
-def train_val_split(imgs, keypoints):
+def train_val_split(imgs, keypoints, random_state):
     d = dict()
     for file in imgs:
         key = "".join(file.split("-")[:-1])
@@ -22,6 +22,8 @@ def train_val_split(imgs, keypoints):
             d[key] = [file]
         else:
             d[key].append(file)
+
+    np.random.seed(random_state)
 
     trains = []
     validations = []
