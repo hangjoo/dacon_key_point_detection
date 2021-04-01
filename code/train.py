@@ -45,21 +45,14 @@ def main():
     image_set = {"train": train_imgs, "valid": valid_imgs}
     keypoints_set = {"train": train_keypoints, "valid": valid_keypoints}
 
-    hyper_params = {
-        "augmented_ver": data_name,
-        "learning_rate": 0.0025,
-        "num_epochs": 5000,
-        "batch_size": 128
-    }
+    hyper_params = {"augmented_ver": data_name, "learning_rate": 0.0025, "num_epochs": 5000, "batch_size": 128}
 
     ns = neptune.init(project_qualified_name="hangjoo/Dacon-motion-keypoint-detection", api_token=neptune_config.token)
     neptune.create_experiment(name="detectron2", params=hyper_params, upload_source_files="./code/train.py")
     experiment_id = ns._get_current_experiment()._id
 
     for phase in ["train", "valid"]:
-        DatasetCatalog.register(
-            "keypoints_" + phase, lambda phase=phase: get_data_dicts(data_path, image_set[phase], keypoints_set[phase])
-        )
+        DatasetCatalog.register("keypoints_" + phase, lambda phase=phase: get_data_dicts(data_path, image_set[phase], keypoints_set[phase]))
         MetadataCatalog.get("keypoints_" + phase).set(thing_classes=["motion"])
         MetadataCatalog.get("keypoints_" + phase).set(keypoint_names=keypoint_names)
         MetadataCatalog.get("keypoints_" + phase).set(keypoint_flip_map=keypoint_flip_map)
@@ -69,7 +62,7 @@ def main():
     cfg.merge_from_file(model_zoo.get_config_file("COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x.yaml"))
     cfg.DATASETS.TRAIN = ("keypoints_train",)
     cfg.DATASETS.TEST = ("keypoints_valid",)
-    cfg.DATALOADER.NUM_WORKERS = 2  # On Windows environment, this value must be 0.
+    cfg.DATALOADER.NUM_WORKERS = 0  # On Windows environment, this value must be 0.
     cfg.SOLVER.IMS_PER_BATCH = 1  # mini batch size would be (SOLVER.IMS_PER_BATCH) * (ROI_HEADS.BATCH_SIZE_PER_IMAGE).
     cfg.SOLVER.BASE_LR = hyper_params["learning_rate"]  # Learning Rate.
     cfg.SOLVER.MAX_ITER = hyper_params["num_epochs"]  # Max iteration.
@@ -95,7 +88,7 @@ def main():
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7  # set a custom testing threshold
     predictor = DefaultPredictor(cfg)
 
-    test_dir = os.path.join(data_path, "test_imgs")
+    test_dir = os.path.join("data", "test_imgs")
     test_list = os.listdir(test_dir)
     test_list.sort()
     except_list = []
@@ -125,9 +118,7 @@ def main():
 
     df.to_csv(os.path.join(cfg.OUTPUT_DIR, "submission.csv"), index=False)
     if except_list:
-        print(
-            "The following images are not detected keypoints. The row corresponding that images names would be filled with 0 value."
-        )
+        print("The following images are not detected keypoints. The row corresponding that images names would be filled with 0 value.")
         print(*except_list)
     save_samples(cfg.OUTPUT_DIR, test_dir, os.path.join(cfg.OUTPUT_DIR, "submission.csv"), mode="random", size=5)
     neptune.stop()

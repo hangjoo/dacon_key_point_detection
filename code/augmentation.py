@@ -31,7 +31,7 @@ def main():
     data_path = "./data"
     src_path = os.path.join(data_path, "original")
     src_image_path = os.path.join(src_path, "train_imgs")
-    src_df = pd.read_csv(os.path.join(src_path, "train_df_modified.csv"))
+    src_df = pd.read_csv(os.path.join(src_path, "original.csv"))
 
     keypoints_labels = list(map(lambda x: x[:-2], src_df.columns[1:].tolist()[::2]))
     image_list = src_df.iloc[:, 0].to_numpy()
@@ -66,9 +66,10 @@ def main():
             augmented_keypoints = np.array(augmented["keypoints"]).flatten()
             augmented_name = f"{transform_name}_{image_name}"
 
-            cv2.imwrite(os.path.join(dst_image_path, augmented_name), augmented_image)
-            augmented_image_list.append(augmented_name)
-            augmented_keypoints_list.append(augmented_keypoints)
+            if not any(augmented_keypoints < 0):
+                cv2.imwrite(os.path.join(dst_image_path, augmented_name), augmented_image)
+                augmented_image_list.append(augmented_name)
+                augmented_keypoints_list.append(augmented_keypoints)
 
     dst_df = pd.DataFrame(columns=src_df.columns)
     dst_df["image"] = augmented_image_list
