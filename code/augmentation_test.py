@@ -10,8 +10,7 @@ import albumentations as A
 keypoint_params = A.KeypointParams(format="xy", label_fields=["class_labels"], remove_invisible=False, angle_in_degrees=True)
 transform_dict = {
     "Original": A.Compose([A.RandomCrop(height=1080, width=1920, p=1)], keypoint_params=keypoint_params),
-    "CenterCrop_1": A.Compose([A.CenterCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params),
-    "CenterCrop_2": A.Compose([A.CenterCrop(height=960, width=960, p=1)], keypoint_params=keypoint_params),
+    "CenterCrop": A.Compose([A.CenterCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params),
     "RandomCrop_1": A.Compose([A.RandomCrop(height=540, width=720, p=1)], keypoint_params=keypoint_params),
     "RandomCrop_2": A.Compose([A.RandomCrop(height=720, width=960, p=1)], keypoint_params=keypoint_params),
     "RandomCrop_3": A.Compose([A.RandomCrop(height=960, width=1280, p=1)], keypoint_params=keypoint_params),
@@ -36,39 +35,11 @@ transform_dict = {
     "Rotate45_RandomCrop_4": A.Compose(
         [A.Rotate(limit=45, p=1), A.RandomCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params
     ),
-    "Random_ScaleCrop": A.Compose(
+    "RandomScaleCrop": A.Compose(
         [A.RandomCrop(height=960, width=960, p=1), A.RandomScale(scale_limit=0.35, always_apply=True)],
         keypoint_params=keypoint_params,
     ),
     "RandomBrightnessContrast": A.Compose([A.RandomBrightnessContrast(always_apply=True)], keypoint_params=keypoint_params),
-    "Rescale_RandomCrop_1": A.Compose(
-        [A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=720, width=960, p=1)], keypoint_params=keypoint_params
-    ),
-    "Rescale_RandomCrop_2": A.Compose(
-        [A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=540, width=720, p=1)], keypoint_params=keypoint_params
-    ),
-    "Rescale_RandomCrop_3": A.Compose(
-        [A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params
-    ),
-    "Rescale_CenterCrop": A.Compose(
-        [A.RandomScale(scale_limit=0.3, p=1), A.CenterCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params
-    ),
-    "Rescale_Rotate45_RandomCrop_1": A.Compose(
-        [A.Rotate(limit=45, p=1), A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=720, width=960, p=1)],
-        keypoint_params=keypoint_params,
-    ),
-    "Rescale_Rotate45_RandomCrop_2": A.Compose(
-        [A.Rotate(limit=45, p=1), A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=540, width=720, p=1)],
-        keypoint_params=keypoint_params,
-    ),
-    "Rescale_Rotate45_RandomCrop_3": A.Compose(
-        [A.Rotate(limit=45, p=1), A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=720, width=1280, p=1)],
-        keypoint_params=keypoint_params,
-    ),
-    "Rescale_Rotate45_CenterCrop": A.Compose(
-        [A.Rotate(limit=45, p=1), A.RandomScale(scale_limit=0.3, p=1), A.CenterCrop(height=720, width=1280, p=1)],
-        keypoint_params=keypoint_params,
-    ),
 }
 
 
@@ -81,16 +52,9 @@ def main():
     keypoints_labels = list(map(lambda x: x[:-2], src_df.columns[1:].tolist()[::2]))
     image_list = src_df.iloc[:, 0].to_numpy()
     keypoints_list = src_df.iloc[:, 1:].to_numpy()
-    # paired_keypoints_list = keypoints_list.reshape(-1, 24, 2)
-    paired_keypoints_list = []
-    for keypoint in keypoints_list:
-        a_keypoints = []
-        for i in range(0, keypoint.shape[0], 2):
-            a_keypoints.append((float(keypoint[i]), float(keypoint[i + 1])))
-        paired_keypoints_list.append(a_keypoints)
-    paired_keypoints_list = np.array(paired_keypoints_list)
+    paired_keypoints_list = keypoints_list.reshape(-1, 24, 2)
 
-    dst_name = "augmented_2"
+    dst_name = "augmented_6"
     dst_path = os.path.join(data_path, dst_name)
     dst_image_path = os.path.join(dst_path, "train_imgs")
 
@@ -106,21 +70,16 @@ def main():
             "Original",
             "RandomCrop_1",
             "RandomCrop_2",
+            "RandomCrop_3",
+            "RandomCrop_4",
             "RandomSquare_1",
-            "CenterCrop_1",
+            "RandomSquare_2",
+            "RandomSquare_3",
+            "RandomSquare_4",
             "Rotate45",
-            "Rotate45_CenterCrop",
             "Rotate45_RandomCrop_1",
             "Rotate45_RandomCrop_2",
-            "Rotate45_CenterCrop",
-            "Rescale_RandomCrop_1",
-            "Rescale_RandomCrop_2",
-            "Rescale_RandomCrop_3",
-            "Rescale_CenterCrop",
-            "Rescale_Rotate45_RandomCrop_1",
-            "Rescale_Rotate45_RandomCrop_2",
-            "Rescale_Rotate45_RandomCrop_3",
-            "Rescale_Rotate45_CenterCrop",
+            "Rotate45_RandomCrop_3",
         ]
 
         for transform_name in transform_names:

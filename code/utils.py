@@ -14,28 +14,30 @@ from detectron2.engine import HookBase
 from detectron2.utils.events import get_event_storage
 
 
-def train_val_split(imgs, keypoints, random_state):
+def train_val_split(imgs, keypoints, random_state=42):
     d = dict()
     for file in imgs:
-        key = "".join(file.split("-")[:-1])
+        key = ''.join(file.split('-')[:-1])
+
         if key not in d.keys():
             d[key] = [file]
         else:
             d[key].append(file)
-
+            
     np.random.seed(random_state)
-
     trains = []
     validations = []
     for key, value in d.items():
         r = np.random.randint(len(value), size=2)
         for i in range(len(value)):
-            if i in r:
+            if "Origin" in key and i in r:
                 validations.append(np.where(imgs == value[i])[0][0])
             else:
                 trains.append(np.where(imgs == value[i])[0][0])
-
-    return (imgs[trains], imgs[validations], keypoints[trains], keypoints[validations])
+    return (
+        imgs[trains], imgs[validations],
+        keypoints[trains], keypoints[validations]
+    )
 
 
 def get_data_dicts(data_dir, imgs, keypoints):
@@ -53,10 +55,17 @@ def get_data_dicts(data_dir, imgs, keypoints):
         record["image_id"] = idx
 
         keypoints_v = []
+        flag = True
         for i, keypoint_ in enumerate(keypoint):
             keypoints_v.append(keypoint_)  # if coco set, should be added 0.5
+            if keypoint_ < 0:
+                flag = False
             if i % 2 == 1:
-                keypoints_v.append(2)
+                if flag:
+                    keypoints_v.append(2)
+                else:
+                    keypoints_v.append(0)
+                flag = True
 
         x = keypoint[0::2]
         y = keypoint[1::2]
