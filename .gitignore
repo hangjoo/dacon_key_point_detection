@@ -5,6 +5,7 @@ neptune_config.py
 
 # dirs
 data/
+notebooks/
 .vscode/
 detectron2-windows2/
 */__pycache__/
