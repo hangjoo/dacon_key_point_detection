@@ -82,7 +82,6 @@ def main():
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
     cfg.MODEL.ROI_KEYPOINT_HEAD.NUM_KEYPOINTS = 24
     cfg.TEST.KEYPOINT_OKS_SIGMAS = np.ones((24, 1), dtype=float).tolist()
-    # cfg.TEST.KEYPOINT_OKS_SIGMAS = list(np.array([.26, .25, .25, .35, .35, .79, .79, .72, .72, .62, .62, 1.07, 1.07, .87, .87, .89, .89, .79, .56, .56, 1.24, 1.24, .72, .72]) / 10.0)
     cfg.TEST.EVAL_PERIOD = 5000  # Evaluation would occur for every cfg.TEST.EVAL_PERIOD value.
     cfg.OUTPUT_DIR = os.path.join("./output", experiment_id)
 
