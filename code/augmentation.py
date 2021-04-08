@@ -135,23 +135,6 @@ def main():
             augmented_image_list.append(augmented_name)
             augmented_keypoints_list.append(augmented_keypoints)
 
-        height, width = src_image.shape[:2]
-        xs = paired_keypoints.flatten()[0::2]
-        ys = paired_keypoints.flatten()[1::2]
-        x_min, x_max = int(max(min(xs) - 50, 0)), int(min(max(xs) + 50, width))
-        y_min, y_max = int(max(min(ys) - 50, 0)), int(min(max(ys) + 50, height))
-        additional_augment = A.Compose(
-            [A.Crop(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max, always_apply=True)], keypoint_params=keypoint_params
-        )
-        additional_augmented = additional_augment(image=src_image, keypoints=paired_keypoints, class_labels=keypoints_labels)
-        additional_image = additional_augmented["image"]
-        additional_keypoints = np.array(additional_augmented["keypoints"]).flatten()
-        additional_name = f"Additional_{image_name}"
-
-        cv2.imwrite(os.path.join(dst_image_path, additional_name), additional_image)
-        augmented_image_list.append(additional_name)
-        augmented_keypoints_list.append(additional_keypoints)
-
     dst_df = pd.DataFrame(columns=src_df.columns)
     dst_df["image"] = augmented_image_list
     dst_df.iloc[:, 1:] = augmented_keypoints_list

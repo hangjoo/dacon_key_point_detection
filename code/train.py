@@ -10,18 +10,14 @@ from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog, DatasetCatalog
 
-from utils import train_val_split, get_data_dicts, hook_neptune, save_samples
+from utils import train_val_split, get_data_dicts, save_samples
 from Trainer import Trainer
-
-import neptune
-import neptune_config
 
 
 def main():
     data_name = "augmented_2"
     data_path = os.path.join("./data", data_name)
     csv_name = data_name + ".csv"
-
     train_df = pd.read_csv(os.path.join(data_path, csv_name))
 
     keypoint_names = list(map(lambda x: x[:-2], train_df.columns.to_list()[1::2]))
@@ -53,10 +49,6 @@ def main():
         "description": "Final training"
     }
 
-    ns = neptune.init(project_qualified_name="hangjoo/Dacon-motion-keypoint-detection", api_token=neptune_config.token)
-    neptune.create_experiment(name="detectron2", params=hyper_params, upload_source_files="./code/train.py")
-    experiment_id = ns._get_current_experiment()._id
-
     for phase in ["train", "valid"]:
         DatasetCatalog.register(
             "keypoints_" + phase, lambda phase=phase: get_data_dicts(data_path, image_set[phase], keypoints_set[phase])
@@ -83,11 +75,10 @@ def main():
     cfg.MODEL.ROI_KEYPOINT_HEAD.NUM_KEYPOINTS = 24
     cfg.TEST.KEYPOINT_OKS_SIGMAS = np.ones((24, 1), dtype=float).tolist()
     cfg.TEST.EVAL_PERIOD = 5000  # Evaluation would occur for every cfg.TEST.EVAL_PERIOD value.
-    cfg.OUTPUT_DIR = os.path.join("./output", experiment_id)
+    cfg.OUTPUT_DIR = os.path.join("./output", data_name)
 
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
     trainer = Trainer(cfg)
-    trainer.register_hooks([hook_neptune(max_iter=hyper_params["num_epochs"])])
     trainer.resume_or_load(resume=False)
     trainer.train()
 
@@ -125,14 +116,13 @@ def main():
     df["image"] = files
     df.iloc[:, 1:] = preds
 
-    df.to_csv(os.path.join(cfg.OUTPUT_DIR, f"{experiment_id}_submission.csv"), index=False)
+    df.to_csv(os.path.join(cfg.OUTPUT_DIR, f"{data_name}_submission.csv"), index=False)
     if except_list:
         print(
             "The following images are not detected keypoints. The row corresponding that images names would be filled with 0 value."
         )
         print(*except_list)
-    save_samples(cfg.OUTPUT_DIR, test_dir, os.path.join(cfg.OUTPUT_DIR, f"{experiment_id}_submission.csv"), mode="random", size=5)
-    neptune.stop()
+    save_samples(cfg.OUTPUT_DIR, test_dir, os.path.join(cfg.OUTPUT_DIR, f"{data_name}_submission.csv"), mode="random", size=5)
 
 
 if __name__ == "__main__":
