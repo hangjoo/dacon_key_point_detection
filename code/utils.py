@@ -41,7 +41,6 @@ def train_val_split(imgs, keypoints, random_state=42):
 
 
 def get_data_dicts(data_dir, imgs, keypoints):
-    # train_dir = os.path.join(data_dir, "augmented" if phase=="train" else "train_imgs")
     train_dir = os.path.join(data_dir, "train_imgs")
     dataset_dicts = []
 

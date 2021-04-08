@@ -15,7 +15,7 @@ from Trainer import Trainer
 
 
 def main():
-    data_name = "augmented_2"
+    data_name = "augmented_1"
     data_path = os.path.join("./data", data_name)
     csv_name = data_name + ".csv"
     train_df = pd.read_csv(os.path.join(data_path, csv_name))
@@ -68,7 +68,6 @@ def main():
     cfg.SOLVER.MAX_ITER = hyper_params["num_epochs"]  # Max iteration.
     cfg.SOLVER.GAMMA = 0.8
     cfg.SOLVER.STEPS = [3000, 4000, 5000, 6000, 7000, 8000]  # The iteration number to decrease learning rate by GAMMA.
-    # cfg.SOLVER.LR_SCHEDULER_NAME = "WarmupMultiStepLR"
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x.yaml")
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = hyper_params["batch_size"]  # Use to calculate RPN loss.
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
@@ -97,7 +96,6 @@ def main():
     preds = []
     for file in tqdm(test_list):
         filepath = os.path.join(test_dir, file)
-        # print(filepath)
         im = cv2.imread(filepath)
         outputs = predictor(im)
         outputs = outputs["instances"].to("cpu").get("pred_keypoints").numpy()

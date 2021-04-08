@@ -21,54 +21,21 @@ transform_dict = {
     "RandomSquare_3": A.Compose([A.RandomCrop(height=540, width=540, p=1)], keypoint_params=keypoint_params),
     "RandomSquare_4": A.Compose([A.RandomCrop(height=420, width=420, p=1)], keypoint_params=keypoint_params),
     "Rotate45": A.Compose([A.Rotate(limit=45, p=1)], keypoint_params=keypoint_params),
-    "Rotate45_CenterCrop": A.Compose(
-        [A.Rotate(limit=45, p=1), A.CenterCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params
-    ),
-    "Rotate45_RandomCrop_1": A.Compose(
-        [A.Rotate(limit=45, p=1), A.RandomCrop(height=540, width=720, p=1)], keypoint_params=keypoint_params
-    ),
-    "Rotate45_RandomCrop_2": A.Compose(
-        [A.Rotate(limit=45, p=1), A.RandomCrop(height=720, width=960, p=1)], keypoint_params=keypoint_params
-    ),
-    "Rotate45_RandomCrop_3": A.Compose(
-        [A.Rotate(limit=45, p=1), A.RandomCrop(height=960, width=960, p=1)], keypoint_params=keypoint_params
-    ),
-    "Rotate45_RandomCrop_4": A.Compose(
-        [A.Rotate(limit=45, p=1), A.RandomCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params
-    ),
-    "Random_ScaleCrop": A.Compose(
-        [A.RandomCrop(height=960, width=960, p=1), A.RandomScale(scale_limit=0.35, always_apply=True)],
-        keypoint_params=keypoint_params,
-    ),
+    "Rotate45_CenterCrop": A.Compose([A.Rotate(limit=45, p=1), A.CenterCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params),
+    "Rotate45_RandomCrop_1": A.Compose([A.Rotate(limit=45, p=1), A.RandomCrop(height=540, width=720, p=1)], keypoint_params=keypoint_params),
+    "Rotate45_RandomCrop_2": A.Compose([A.Rotate(limit=45, p=1), A.RandomCrop(height=720, width=960, p=1)], keypoint_params=keypoint_params),
+    "Rotate45_RandomCrop_3": A.Compose([A.Rotate(limit=45, p=1), A.RandomCrop(height=960, width=960, p=1)], keypoint_params=keypoint_params),
+    "Rotate45_RandomCrop_4": A.Compose([A.Rotate(limit=45, p=1), A.RandomCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params),
+    "Random_ScaleCrop": A.Compose([A.RandomCrop(height=960, width=960, p=1), A.RandomScale(scale_limit=0.35, always_apply=True)], keypoint_params=keypoint_params),
     "RandomBrightnessContrast": A.Compose([A.RandomBrightnessContrast(always_apply=True)], keypoint_params=keypoint_params),
-    "Rescale_RandomCrop_1": A.Compose(
-        [A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=720, width=960, p=1)], keypoint_params=keypoint_params
-    ),
-    "Rescale_RandomCrop_2": A.Compose(
-        [A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=540, width=720, p=1)], keypoint_params=keypoint_params
-    ),
-    "Rescale_RandomCrop_3": A.Compose(
-        [A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params
-    ),
-    "Rescale_CenterCrop": A.Compose(
-        [A.RandomScale(scale_limit=0.3, p=1), A.CenterCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params
-    ),
-    "Rescale_Rotate45_RandomCrop_1": A.Compose(
-        [A.Rotate(limit=45, p=1), A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=720, width=960, p=1)],
-        keypoint_params=keypoint_params,
-    ),
-    "Rescale_Rotate45_RandomCrop_2": A.Compose(
-        [A.Rotate(limit=45, p=1), A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=540, width=720, p=1)],
-        keypoint_params=keypoint_params,
-    ),
-    "Rescale_Rotate45_RandomCrop_3": A.Compose(
-        [A.Rotate(limit=45, p=1), A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=720, width=1280, p=1)],
-        keypoint_params=keypoint_params,
-    ),
-    "Rescale_Rotate45_CenterCrop": A.Compose(
-        [A.Rotate(limit=45, p=1), A.RandomScale(scale_limit=0.3, p=1), A.CenterCrop(height=720, width=1280, p=1)],
-        keypoint_params=keypoint_params,
-    ),
+    "Rescale_RandomCrop_1": A.Compose([A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=720, width=960, p=1)], keypoint_params=keypoint_params),
+    "Rescale_RandomCrop_2": A.Compose([A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=540, width=720, p=1)], keypoint_params=keypoint_params),
+    "Rescale_RandomCrop_3": A.Compose([A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params),
+    "Rescale_CenterCrop": A.Compose([A.RandomScale(scale_limit=0.3, p=1), A.CenterCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params),
+    "Rescale_Rotate45_RandomCrop_1": A.Compose([A.Rotate(limit=45, p=1), A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=720, width=960, p=1)], keypoint_params=keypoint_params),
+    "Rescale_Rotate45_RandomCrop_2": A.Compose([A.Rotate(limit=45, p=1), A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=540, width=720, p=1)], keypoint_params=keypoint_params),
+    "Rescale_Rotate45_RandomCrop_3": A.Compose([A.Rotate(limit=45, p=1), A.RandomScale(scale_limit=0.3, p=1), A.RandomCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params),
+    "Rescale_Rotate45_CenterCrop": A.Compose([A.Rotate(limit=45, p=1), A.RandomScale(scale_limit=0.3, p=1), A.CenterCrop(height=720, width=1280, p=1)], keypoint_params=keypoint_params),
 }
 
 
@@ -81,7 +48,6 @@ def main():
     keypoints_labels = list(map(lambda x: x[:-2], src_df.columns[1:].tolist()[::2]))
     image_list = src_df.iloc[:, 0].to_numpy()
     keypoints_list = src_df.iloc[:, 1:].to_numpy()
-    # paired_keypoints_list = keypoints_list.reshape(-1, 24, 2)
     paired_keypoints_list = []
     for keypoint in keypoints_list:
         a_keypoints = []
