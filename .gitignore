@@ -10,3 +10,4 @@ notebooks/
 detectron2-windows2/
 */__pycache__/
 output/
+.ipynb_checkpoints/
